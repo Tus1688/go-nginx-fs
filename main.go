@@ -16,7 +16,7 @@ import (
 func main() {
 	app := fiber.New()
 
-	app.Post("/upload", func(c *fiber.Ctx) error {
+	app.Post("/handler", func(c *fiber.Ctx) error {
 		file, err := c.FormFile("picture")
 		if err != nil {
 			return c.SendStatus(400)
@@ -63,10 +63,33 @@ func main() {
 			return c.SendStatus(500)
 		}
 		// send json of the new file name
-		return c.JSON(fiber.Map{
+		return c.Status(201).JSON(fiber.Map{
 			"file": fileName,
 		})
 	})
 
-	app.Listen(":3000")
+	app.Delete("/handler", func(c *fiber.Ctx) error {
+		fileName := c.Query("file")
+		if fileName == "" {
+			return c.SendStatus(400)
+		}
+		// delete the file
+		err := os.Remove(fileName)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return c.SendStatus(404)
+			}
+			return c.SendStatus(500)
+		}
+		return c.SendStatus(200)
+	})
+
+	err := os.Chdir("/usr/share/nginx/html")
+	if err != nil {
+		panic(err)
+	}
+	err = app.Listen(":3000")
+	if err != nil {
+		panic(err)
+	}
 }
