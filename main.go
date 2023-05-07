@@ -16,6 +16,12 @@ import (
 func main() {
 	app := fiber.New()
 
+	var authorization string
+	authorization = os.Getenv("AUTHORIZATION")
+	if authorization == "" {
+		panic("AUTHORIZATION is not set")
+	}
+	app.Use(AuthMiddleware)
 	app.Post("/handler", func(c *fiber.Ctx) error {
 		file, err := c.FormFile("picture")
 		if err != nil {
@@ -92,4 +98,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func AuthMiddleware(c *fiber.Ctx) error {
+	authorization := c.Get("Authorization")
+	if authorization != os.Getenv("AUTHORIZATION") {
+		return c.SendStatus(401)
+	}
+	return c.Next()
 }
