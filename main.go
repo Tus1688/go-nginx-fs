@@ -13,10 +13,13 @@ import (
 	"github.com/google/uuid"
 )
 
+var authorization string
+
+const webpQuality = 80
+
 func main() {
 	app := fiber.New()
 
-	var authorization string
 	authorization = os.Getenv("AUTHORIZATION")
 	if authorization == "" {
 		panic("AUTHORIZATION is not set")
@@ -51,7 +54,7 @@ func main() {
 		fileName := uuid.New().String() + ".webp"
 
 		// Encode the image as a WebP image
-		byt, err := webp.EncodeRGBA(img, 80)
+		byt, err := webp.EncodeRGBA(img, webpQuality)
 		if err != nil {
 			return c.SendStatus(500)
 		}
@@ -101,8 +104,8 @@ func main() {
 }
 
 func AuthMiddleware(c *fiber.Ctx) error {
-	authorization := c.Get("Authorization")
-	if authorization != os.Getenv("AUTHORIZATION") {
+	authValue := c.Get("Authorization")
+	if authValue != authorization {
 		return c.SendStatus(401)
 	}
 	return c.Next()
